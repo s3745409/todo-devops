@@ -4,21 +4,31 @@
       <div class="column is-12"><h2 class="title">Todo Application</h2></div>
       <div class="column is-8 is-offset-2">
         <div class="field has-addons">
-        <div class="control is-flex-grow-1">
-          <input class="input" type="text" placeholder="Create a task..." v-model="todo" />
+          <div class="control is-flex-grow-1">
+            <input
+              class="input"
+              type="text"
+              placeholder="Create a task..."
+              v-model="todo"
+            />
+          </div>
+          <div class="control">
+            <a class="button is-success" @click="addItem()">
+              <i class="fas fa-plus"></i
+            ></a>
+          </div>
         </div>
-        <div class="control">
-          <a class="button is-success" @click="addItem()"> <i class="fas fa-plus"></i></a>
-        </div>
-      </div>
       </div>
       <div class="column is-8 is-offset-2 todo-item-container">
-        <TodoItem
-        v-for="todo in this.todoItems.items"
-        v-bind:key="todo.id"
-        v-bind:todoItem="todo"
-        v-on:removeFromList="removeTodoItem(todo)"
-         />
+        <div v-if="this.todoItems.items.length > 0">
+          <TodoItem
+            v-for="todo in this.todoItems.items"
+            v-bind:key="todo.id"
+            v-bind:todoItem="todo"
+            v-on:removeFromList="removeTodoItem(todo.id)"
+          />
+        </div>
+        <div v-else>"No items"</div>
       </div>
       <div class="column is-8 is-offset-2 todo-item-container">
         <i class="far fa-copyright"></i> danmeldominique
@@ -28,9 +38,8 @@
 </template>
 
 <script>
-import { v4 as uuidv4 } from "uuid";
-import TodoItem from '@/components/TodoItem.vue'
-
+import TodoItem from "@/components/TodoItem.vue";
+import axios from "axios";
 export default {
   name: "App",
   components: {
@@ -38,25 +47,53 @@ export default {
   },
   data() {
     return {
-      todo: '',
+      todo: "",
       todoItems: {
-        items: []
-      }
-    }
+        items: [],
+      },
+    };
+  },
+  mounted() {
+    this.getItems();
   },
   methods: {
-    addItem(){
-      let todoItem = {
-        id: uuidv4(),
-        content: this.todo
-      }
-      this.todoItems.items.push(todoItem)
-      this.todo = ''
+    async getItems() {
+      await axios
+        .get("/api/todos")
+        .then((res) => {
+          this.todoItems.items = res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
-    removeTodoItem(item){
-      this.todoItems.items = this.todoItems.items.filter(i => i.id !== item.id)
-    }
-  }
+    async addItem() {
+      await axios
+        .post("/api/todos", {
+          content: this.todo,
+        })
+        .then((res) => {
+          console.log(res.data);
+          this.getItems();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      this.todo = "";
+    },
+    async removeTodoItem(id) {
+      await axios
+        .delete("/api/todos/" + id)
+        .then((res) => {
+          console.log(res.data);
+          this.getItems();
+        })
+        .catch((err) => {
+          console.log(err);
+          this.getItems();
+        });
+    },
+  },
 };
 </script>
 
