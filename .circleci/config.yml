@@ -20,11 +20,13 @@ jobs:
       - run:
           name: Lint frontend code
           command: |
+            cd frontend
             npm run lint
       - run:
           name: Run frontend unit tests
           command: |
             mkdir -p test-output
+            cd frontend
             npm run unit:test
       - store_test_results:
           path: test-output
