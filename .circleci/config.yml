@@ -1,0 +1,36 @@
+version: 2.1
+commands:
+  install_dependencies:
+    steps:
+      - run:
+          name: Install Dependencies
+          command: |
+            cd frontend
+            npm install
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:lts
+    environment:
+      JEST_JUNIT_OUTPUT_DIR: test-output
+    steps:
+      - checkout
+      - install_dependencies
+      - run:
+          name: Lint frontend code
+          command: |
+            npm run lint
+      - run:
+          name: Run frontend unit tests
+          command: |
+            mkdir -p test-output
+            npm run unit:test
+      - store_test_results:
+          path: test-output
+
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - build
